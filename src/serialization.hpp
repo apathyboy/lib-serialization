@@ -18,6 +18,18 @@ void write(StreamT& os, T& val) {
     os.write(reinterpret_cast<const char*>(&val), sizeof(T));
 }
 
+template <typename StreamT, typename T,
+          typename std::enable_if_t<std::is_enum<T>::value, int> = 0>
+void read(StreamT& is, T& val) {
+    is.read(reinterpret_cast<char*>(&val), sizeof(T));
+}
+
+template <typename StreamT, typename T,
+          typename std::enable_if_t<std::is_enum<T>::value, int> = 0>
+void write(StreamT& os, const T& val) {
+    os.write(reinterpret_cast<const char*>(&val), sizeof(T));
+}
+
 template <typename StreamT>
 void read(StreamT& is, std::string& val) {
     auto length = read<uint16_t>(is);

@@ -98,6 +98,51 @@ SCENARIO("string types can be serialized and deserialzed", "[strings]") {
     }
 }
 
-// TODO - Create scenario for enum types with an integral underlying type
+SCENARIO("enums with underlying integral types can be serialized and deserialzed", "[integrals]") {
+    enum class TEST_ENUM : uint32_t {
+        TEST1 = 1,
+        TEST2 = 2
+    };
+
+    GIVEN("an initialized 32bit signed integer and a binary stream") {
+        TEST_ENUM  tmp = TEST_ENUM::TEST1;
+        std::stringstream bs(std::ios_base::out | std::ios_base::in | std::ios_base::binary);
+
+        WHEN("the stream has the enum written to it") {
+            esb::write(bs, tmp);
+
+            THEN("the serialized output size is increased by 4") {
+                REQUIRE(bs.str().length() == 4);
+            }
+
+            AND_THEN("the serialized output is little-endian") {
+                auto str = bs.str();
+                REQUIRE(str[0] == (char)0x01);
+                REQUIRE(str[1] == (char)0x00);
+                REQUIRE(str[2] == (char)0x00);
+                REQUIRE(str[3] == (char)0x00);
+            }
+        }
+    }
+
+    GIVEN("a binary stream containing a serialized 32bit signed integer") {
+        TEST_ENUM  tmp = TEST_ENUM::TEST1;
+        std::stringstream bs(std::ios_base::out | std::ios_base::in | std::ios_base::binary);
+        esb::write(bs, tmp);
+
+        WHEN("the stream has the integer read from it") {
+            auto test_enum = esb::read<TEST_ENUM>(bs);
+
+            THEN("the value read is the value expected") { REQUIRE(test_enum == tmp); }
+        }
+
+        AND_WHEN("the stream is read into an existing integer variable") {
+            TEST_ENUM  tmp;
+            esb::read(bs, tmp);
+
+            THEN("the value read is the value expected") { REQUIRE(tmp == TEST_ENUM::TEST1); }
+        }
+    }
+}
 
 // TODO - Create scenario for bool type
